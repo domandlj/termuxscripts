@@ -12,10 +12,10 @@ class Item():
         self.content = []
         self.lvl = 0
 
+
 def add_item(name : str, target_item : Item, item : Item):
     """
         Adds item to the sub-item called name in target_item
-        Traverses target_item using BFS.
     """
     lvl = 1
     if target_item.name == name:
@@ -35,7 +35,7 @@ def add_item(name : str, target_item : Item, item : Item):
 
                 if sub_item.name == name:
                     item.lvl = lvl + 1 
-                    sub_item.content.append(item)
+                    sub_item.content.insert(0, item) 
 
             lvl += 1
                     
@@ -46,18 +46,16 @@ def add_item(name : str, target_item : Item, item : Item):
 def item_to_str(item : Item) -> str:
     """
         Converts item to string.
-        Traverses item using BFS.
     """
     queue = []
     save = item.name + EOL
 
 
     for e in item.content:
-    
         queue.append(e)
         while queue:
             
-            item_i = queue.pop(0)
+            item_i = queue.pop()
             space = SEPARATOR
             space *= item_i.lvl
             
@@ -149,4 +147,4 @@ if __name__ == '__main__':
     
     med = str_to_dict(txt)
     item = dict_to_item(med)
-    print(item_to_str(item))
+    print(item_to_str(item)) 

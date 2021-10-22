@@ -1,5 +1,8 @@
 import json
 
+BLANK_LINE = ""
+EOL = "\n"
+SEPARATOR = "-"
 
 class Item():
     def __init__(self, name):
@@ -14,37 +17,36 @@ def see_item(item):
     print(item.name)
     
 
-    for e in item.content:
+    for item_i in item.content:
     
-        stack.append(e)
+        stack.append(item_i)
         while stack != []:
             
             curr = stack.pop()
         
-            space = "  "
+            space = SEPARATOR
             space *= curr.lvl
             print(space + curr.name)
-            for x in curr.content:
-                stack.append(x)
+            for item_j in curr.content:
+                stack.append(item_j)
 
 
-def add_item(name, collection, item, lvl=1):
+def add_item(name, collection, item, lvl = 1):
     if collection.name == name:
         item.lvl = lvl 
         collection.content.append(item)
 
     elif collection.content == []:
-        return
-
+        return 
+    
     else:
         for content in collection.content:
             add_item(name,content, item, lvl + 1) 
 
 
-
 def item_to_txt(item):
     stack = []
-    save = item.name + "\n"
+    save = item.name + EOL
     
 
     for e in item.content:
@@ -54,41 +56,48 @@ def item_to_txt(item):
             
             curr = stack.pop()
         
-            space = "-"
+            space = SEPARATOR
             space *= curr.lvl
-            save += space + curr.name + "\n"
+            save += space + curr.name + EOL
             for x in curr.content:
                 stack.append(x)
-
+    
+    save = save[:len(save)-1]
+    
     return save
 
 
-def txt_to_item(txt):
-    item = Item("")
-    last_name = txt.split("\n")[0]
-    item.name = last_name
+def txt_to_dict(txt):
+    item = Item(BLANK_LINE)
+    item.name = txt.split(EOL)[0]
+    
 
-    
-    
-    lines = txt.split("\n")
-    names = list(map(lambda l: l.replace("-",""),lines))
-    lvls = list(map(lambda l: l.count("-"), lines))
-    
-    asoc = {}
+    lines = txt.split(EOL)
 
-    for name in names:
-        asoc[name] = []
+    names = list(map(lambda line: 
+        line.replace(SEPARATOR,BLANK_LINE), lines))
+    
+    lvls = list(map(lambda line:
+        line.count(SEPARATOR), lines))
+    
+    item_dict = {}
 
     for i in range(len(lines)):
-        name = names[i]
+        item_dict[names[i]] = []
+
+        j = i + 1
         ok = True
-        for j in range(i,len(lines)):
-            if lvls[j] == lvls[i]+1 and ok:
-                asoc
-
-
-
-    return item
+        
+        while ok and j < len(lines):
+            if lvls[j] == lvls[i] + 1:
+                item_dict[names[i]].append(names[j])
+            
+            elif lvls[j] == lvls[i]:
+                ok = False
+            
+            j += 1
+    
+    return item_dict
 
 if __name__ == '__main__':
     libro = Item("libro")
@@ -107,5 +116,5 @@ if __name__ == '__main__':
     
     txt = item_to_txt(libro)
     print(txt)
-    item  = txt_to_item(txt)
-    see_item(item)
+    item  = txt_to_dict(txt)
+    print(item)

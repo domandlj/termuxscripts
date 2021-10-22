@@ -1,82 +1,102 @@
 import json
 
-BLANK_LINE = ""
+BLANK = ""
 EOL = "\n"
 SEPARATOR = "-"
+MARKED = ";"
 
 class Item():
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, name : str):
+        self.name = name.replace(MARKED, BLANK)
         self.marked = False
         self.content = []
         self.lvl = 0
 
+def add_item(name : str, target_item : Item, item : Item):
+    """
+        Adds item to the sub-item called name in target_item
+        Traverses target_item using BFS.
+    """
+    lvl = 1
+    if target_item.name == name:
+        item.lvl = lvl
+        target_item.content.append(item)
 
-def see_item(item):
-    stack = []
-    print(item.name)
-    
-
-    for item_i in item.content:
-    
-        stack.append(item_i)
-        while stack != []:
-            
-            curr = stack.pop()
-        
-            space = SEPARATOR
-            space *= curr.lvl
-            print(space + curr.name)
-            for item_j in curr.content:
-                stack.append(item_j)
-
-
-def add_item(name, collection, item, lvl = 1):
-    if collection.name == name:
-        item.lvl = lvl 
-        collection.content.append(item)
-
-    elif collection.content == []:
-        return 
-    
     else:
-        for content in collection.content:
-            add_item(name,content, item, lvl + 1) 
+        items = target_item.content
+        queue_of_lvl = items 
+        
+        while queue_of_lvl:
+            next_lvl = []
+            
+            
+            for sub_item in queue_of_lvl:
+                next_lvl += sub_item.content
 
+                if sub_item.name == name:
+                    item.lvl = lvl + 1 
+                    sub_item.content.append(item)
 
-def item_to_txt(item):
-    stack = []
+            lvl += 1
+                    
+
+            queue_of_lvl = next_lvl
+            
+
+def item_to_str(item : Item) -> str:
+    """
+        Converts item to string.
+        Traverses item using BFS.
+    """
+    queue = []
     save = item.name + EOL
-    
+
 
     for e in item.content:
     
-        stack.append(e)
-        while stack != []:
+        queue.append(e)
+        while queue:
             
-            curr = stack.pop()
-        
+            item_i = queue.pop(0)
             space = SEPARATOR
-            space *= curr.lvl
-            save += space + curr.name + EOL
-            for x in curr.content:
-                stack.append(x)
+            space *= item_i.lvl
+            
+            name = item_i.name
+
+            if item_i.marked:
+                item_i.name += MARKED
+            
+            save += space + item_i.name + EOL
+            
+            for item_j in item_i.content:
+                queue.append(item_j)
     
     save = save[:len(save)-1]
     
     return save
 
 
-def txt_to_dict(txt):
-    item = Item(BLANK_LINE)
+def str_to_dict(txt : str) -> dict:
+    """
+        Parses txt and transforms it to dict.
+    """
+    item = Item(BLANK)
     item.name = txt.split(EOL)[0]
     
 
     lines = txt.split(EOL)
-
-    names = list(map(lambda line: 
-        line.replace(SEPARATOR,BLANK_LINE), lines))
     
+    marked = list(map(lambda line: 
+        line.count(MARKED) > 0, lines))
+
+    lines = list(map(lambda line:
+        line.replace(MARKED, BLANK), lines))
+
+   
+    names = list(map(lambda line: 
+        line.replace(SEPARATOR, BLANK), lines))
+    
+
     lvls = list(map(lambda line:
         line.count(SEPARATOR), lines))
     
@@ -87,7 +107,6 @@ def txt_to_dict(txt):
 
         j = i + 1
         ok = True
-        
         while ok and j < len(lines):
             if lvls[j] == lvls[i] + 1:
                 item_dict[names[i]].append(names[j])
@@ -96,25 +115,38 @@ def txt_to_dict(txt):
                 ok = False
             
             j += 1
+
+        item_dict[names[i]].append(marked[i])
     
     return item_dict
 
-if __name__ == '__main__':
-    libro = Item("libro")
-    cap1 = Item("cap1")
-    murakami = Item("murakami")
-    pajaro = Item("pajaro que da cuerda...")
-    cap2 = Item("cap2")
-    borges = Item("borges") 
-    quiroga = Item("quiroga")
-    add_item( "libro", libro,  cap1)
-    add_item("cap1", libro, murakami)
-    add_item("murakami", libro, pajaro)
-    add_item("libro", libro, cap2)
-    add_item("cap1", libro, borges)
-    add_item("cap2",libro, quiroga)
+
+def dict_to_item(item_dict : dict) -> Item:
+    """
+        Transforms dict into item.
+    """
+
+    item = Item("")
+    keys = item_dict.keys()
+
+    item.name = list(item_dict.keys())[0]
     
-    txt = item_to_txt(libro)
-    print(txt)
-    item  = txt_to_dict(txt)
-    print(item)
+    for key in keys:
+        sub_items = item_dict[key]
+        marked = sub_items.pop()
+        
+        for name in sub_items:
+            sub_item = Item(name)
+            items = item_dict[name]
+            sub_item.marked = items[len(items)-1]
+            add_item(key, item, sub_item)
+
+    return item 
+
+if __name__ == '__main__':
+    txt = open('foo.txt')
+    txt = txt.read()
+    
+    med = str_to_dict(txt)
+    item = dict_to_item(med)
+    print(item_to_str(item))
